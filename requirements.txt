@@ -1,0 +1,7 @@
+pydantic
+openai
+google-generativeai
+requests
+sqlalchemy
+python-dotenv
+tavily-python

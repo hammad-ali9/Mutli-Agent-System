@@ -20,6 +20,7 @@ def main():
     debate_parser = subparsers.add_parser("debate", help="Start a debate between agents for a predicted event")
     debate_parser.add_argument("event_id", type=str, help="Event ID to debate")
     debate_parser.add_argument("--rounds", type=int, default=3, help="Number of debate rounds")
+    debate_parser.add_argument("--voice", action="store_true", help="Generate audio for the debate")
 
     args = parser.parse_args()
 
@@ -46,7 +47,7 @@ def main():
         # We need the agents from the service to ensure config is shared
         pred_service = PredictionService()
         debate_service = DebateService(pred_service.all_agents)
-        debate_service.run_debate(args.event_id, rounds=args.rounds)
+        debate_service.run_debate(args.event_id, rounds=args.rounds, use_voice=args.voice)
     else:
         parser.print_help()
 

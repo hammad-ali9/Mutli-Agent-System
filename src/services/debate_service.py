@@ -6,11 +6,14 @@ from src.agents.moderator_agent import ModeratorAgent
 from src.models import DebateTurn
 from src.database import Database
 
+from src.services.voice_service import VoiceService
+
 class DebateService:
     def __init__(self, agents: List[BaseAgent]):
         self.db = Database()
         self.moderator = ModeratorAgent()
         self.agents = {a.name: a for a in agents}
+        self.voice_service = VoiceService()
 
     def _get_predictions_summary(self, event_id: str) -> str:
         with sqlite3.connect(self.db.db_path) as conn:
@@ -25,7 +28,7 @@ class DebateService:
                 summary += f"Agent: {name}\nPrediction: {pred}\nProbability: {prob*100}%\nRationale: {data['rationale']}\nKey Facts:\n{facts}\n\n"
             return summary
 
-    def run_debate(self, event_id: str, rounds: int = 3):
+    def run_debate(self, event_id: str, rounds: int = 3, use_voice: bool = False):
         # 1. Fetch event and predictions
         with sqlite3.connect(self.db.db_path) as conn:
             cursor = conn.cursor()
@@ -52,9 +55,11 @@ class DebateService:
             # Moderator provides direction
             direction = self.moderator.provide_direction(event_title, predictions_summary, transcript_str)
             print(f"Moderator: {direction}\n")
+            
+            if use_voice:
+                self.voice_service.generate_audio(direction, "Moderator", f"{event_id}_round_{r+1}_moderator")
 
             # In a real debate, the moderator would pick the agent. 
-            # For V1, we'll let each active agent respond to the moderator's general direction in sequence.
             for name, agent in self.agents.items():
                 if not agent.has_valid_config():
                     continue
@@ -68,6 +73,11 @@ class DebateService:
                 response = agent.debate_turn(direction, transcript_str, predictions_summary, other_preds)
                 print(f"{name}: {response}\n")
                 
+                if use_voice:
+                    # Clean agent name for filename
+                    safe_name = name.replace(" ", "_")
+                    self.voice_service.generate_audio(response, name, f"{event_id}_round_{r+1}_{safe_name}")
+
                 # Update transcript
                 turn = DebateTurn(agent_name=name, content=response)
                 transcript.append(turn)

@@ -124,15 +124,22 @@ Once predictions are locked in the database, trigger the debate layer:
 python main.py debate gpt-6-released-by --rounds 3
 ```
 
+### 6. Voice / Content Mode (V2)
+To generate high-quality OpenAI TTS audio files for the entire debate (stored in `output/audio`):
+```bash
+python main.py debate gpt-6-released-by --voice
+```
+
 ---
 
 ## 🛠️ Agents & Archetypes
 
-| Agent | Focus | Evidence Preference |
-| :--- | :--- | :--- |
-| **Agent A (ChatGPT)** | Precision | Official docs, primary sources |
-| **Agent B (Grok)** | Early Signals | Social sentiment, leaks, experts |
-| **Agent C (Gemini)** | Constraints | Historical precedents, feasibility |
+| Agent | Focus | Evidence Preference | Voice (V2) |
+| :--- | :--- | :--- | :--- |
+| **Agent A (ChatGPT)** | Precision | Official docs, primary sources | Shimmer |
+| **Agent B (Grok)** | Early Signals | Social sentiment, leaks, experts | Onyx |
+| **Agent C (Gemini)** | Constraints | Historical precedents, feasibility | Fable |
+| **Moderator** | Process | - | Nova |
 
 ---
 

@@ -1,149 +1,97 @@
 # AI Prediction Battle (Tech Events)
 
-**AI Prediction Battle** is a recurring benchmark where multiple AI agents independently research and predict outcomes of tech-related Polymarket events. This system compares different AI research strategies (Precision vs. Signals vs. Constraints) using specialized LLM archetypes.
+A multi-agent system designed to research and predict outcomes of tech-related Polymarket events. The system uses specialized LLM archetypes—Precision, Signal, and Constraint—to simulate independent research and debate cycles.
 
 ---
 
-## 🏗️ System Architecture
+## 🏗️ Architecture
 
 ### V0: Prediction Engine
+Predicts binary outcomes using independent web research (Tavily).
 ```mermaid
 graph TD
-    A[Polymarket API] -->|Fetch Event| B[PredictionService]
-    B -->|Research Query| C[Tavily Search API]
-    C -->|Web Content| B
-    B -->|Context + Prompt| D[AI Agents]
-    D -->|Independent Prediction| E[(SQLite DB)]
+    A[Polymarket API] -->|Metadata| B[PredictionService]
+    B -->|Query| C[Tavily Search API]
+    C -->|Content| B
+    B -->|Context| D[Agents: A, B, C]
+    D -->|JSON Output| E[(SQLite)]
 ```
 
-### V1: Debate Engine
+### V1: Debate Engine (Turn-based)
+Orchestrates a claim-by-claim rebuttal process via a Moderator Agent.
 ```mermaid
 graph TD
-    A[(SQLite DB)] -->|Fetch Saved Predictions| B[DebateService]
-    B -->|Status Update| M[Moderator Agent]
-    M -->|Strategic Direction| B
-    B -->|Challenge Opponent| C[Agent A]
-    B -->|Rebut Claim| D[Agent B]
-    B -->|Defend Timeline| E[Agent C]
-    C & D & E -->|Immutable Prediction| B
-    B -->|Final Transcript| F[Console/JSON]
-```
-    subgraph "Agent Prediction Engine (V0)"
-        AgentA[Agent A: ChatGPT - Precision]
-        AgentB[Agent B: Grok - Early-Signal]
-        AgentC[Agent C: Gemini - Constraint]
-    end
-    
-    DB --> AgentA
-    DB --> AgentB
-    DB --> AgentC
-    
-    AgentA -->|Web Research| Tavily[Tavily Search API]
-    AgentB -->|Web Research| Tavily
-    AgentC -->|Web Research| Tavily
-    
-    AgentA -->|JSON Prediction| DB
-    AgentB -->|JSON Prediction| DB
-    AgentC -->|JSON Prediction| DB
-
-    subgraph "Debate Engine (V1)"
-        Moderator[Moderator Agent]
-        AgentA <--> Moderator
-        AgentB <--> Moderator
-        AgentC <--> Moderator
-    end
+    A[(SQLite)] -->|Predictions| B[DebateService]
+    B -->|Context| M[Moderator]
+    M -->|Directions| B
+    B -->|Challenges| C[Agent A]
+    B -->|Challenges| D[Agent B]
+    B -->|Challenges| E[Agent C]
+    C & D & E -->|Rebuttals| B
+    B -->|Transcription| F[Terminal/MP3]
 ```
 
-### Core Components
-1. **Event Fetching Module**: Communicates with the Polymarket Gamma API to retrieve binary tech markets, resolution rules, and target dates.
-2. **Persistence Layer**: An SQLite database (`predictions.db`) that stores every event, agent research context, and immutable predictions.
-3. **Agent Orchestrator**: Handles the execution flow, ensuring agents research and predict independently without cross-leakage.
-4. **Specialized Agents**:
-   - **Agent A (ChatGPT - GPT-4o)**: Prioritizes official documentation and conservative probabilities.
-   - **Agent B (Grok - Grok-Beta)**: Focuses on social sentiment, leaks, and early technical indicators on X.
-   - **Agent C (Gemini - Gemini 1.5 Flash)**: Analyzes timeline feasibility, execution constraints, and historical precedents.
+## 🛠️ Agents & Archetypes
+
+| Archetype | Focus | Evidence Preference | Voice (TTS) |
+| :--- | :--- | :--- | :--- |
+| **Agent A (ChatGPT)** | Precision | Official documentation, primary sources | Shimmer |
+| **Agent B (Grok)** | Early Signals | Social sentiment, leaks, experts on X | Onyx |
+| **Agent C (Gemini)** | Constraints | Historical precedents, technical feasibility | Fable |
+| **Moderator** | Logic | Consistency, factual contradictions | Nova |
 
 ---
 
-## 🌊 Execution Flow (Current)
-1. **Initialization**: The system loads API keys from `.env` and checks which agents are available.
-2. **Discovery**: A user provides a Polymarket Event ID (e.g., `36307`).
-3. **Data Retrieval**: Market rules and details are pulled from Gamma API and cached in the DB.
-4. **Independent Research**: Each active agent performs an "advanced" web search via Tavily based on their behavioral archetype.
-5. **Prediction Generation**: Agents process the research results and output a structured JSON prediction (YES/NO + Probability).
-6. **Persistence**: The predictions are locked into the database for scoring and future debate cycles.
+## 🚦 Quick Start
 
----
-
-## 🚀 Roadmap
-
-### **V1: Text Debate Layer (Upcoming)**
-*   **Moderator Agent**: A high-level LLM that identifies contradictions between agent predictions.
-*   **Structured Turns**: Agents will challenge specific factual claims made by their opponents.
-*   **Claim Rebuttals**: Agents can rebut challenges using new research if a contradiction is surfaced.
-*   **Narrative Output**: A readable transcript of the "Battle" highlighting the core points of disagreement.
-
-### **V2: Audio & Discovery (Future)**
-*   **Voice Integration**: Each agent assigned a unique TTS (Text-to-Speech) voice for audio summaries.
-*   **Automated Discovery**: Filter-based discovery of new tech events on Polymarket (e.g., liquidity > $100k, Category: "Tech").
-*   **Visual Dashboard**: A web interface to view the long-term leaderboard of agent accuracy.
-
----
-
-## 🛠️ Setup & Usage
-
-### 1. Environment Secrets
-Create a `.env` file with your API keys:
+### 1. Requirements
+Ensure you have an `.env` file with the following:
 ```env
-OPENAI_API_KEY=...
-XAI_API_KEY=...
-GEMINI_API_KEY=...
-TAVILY_API_KEY=...
+OPENAI_API_KEY=x...
+XAI_API_KEY=x...
+GEMINI_API_KEY=x...
+TAVILY_API_KEY=x...
 ```
 
-### 2. Installation
+### 2. Setup
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Discover Tech Events
-To see a list of active tech-related events and their IDs:
+### 3. Usage Commands
+
+**Discover Trending Events**
+Find IDs or Slugs for active tech markets:
 ```bash
 python main.py discover
 ```
 
-### 4. Run a Battle (V0)
-Run a prediction battle by providing an Event ID, Slug, or URL:
+**Run Research & Predictions (V0)**
+Fetches market data, triggers independent research, and locks predictions in DB.
 ```bash
-python main.py predict gpt-6-released-by
+python main.py predict [event_id | slug | url]
 ```
 
-### 5. Start a Debate (V1)
-Once predictions are locked in the database, trigger the debate layer:
+**Trigger Agent Debate (V1/V2)**
+Starts a moderated debate between agents based on previously locked predictions.
 ```bash
-python main.py debate gpt-6-released-by --rounds 3
-```
+# Text-only debate
+python main.py debate [event_id | slug] --rounds 3
 
-### 6. Voice / Content Mode (V2)
-To generate high-quality OpenAI TTS audio files for the entire debate (stored in `output/audio`):
-```bash
-python main.py debate gpt-6-released-by --voice
+# With Voice (OpenAI TTS)
+python main.py debate [event_id | slug] --voice
 ```
 
 ---
 
-## 🛠️ Agents & Archetypes
+## 📦 Core Modules
 
-| Agent | Focus | Evidence Preference | Voice (V2) |
-| :--- | :--- | :--- | :--- |
-| **Agent A (ChatGPT)** | Precision | Official docs, primary sources | Shimmer |
-| **Agent B (Grok)** | Early Signals | Social sentiment, leaks, experts | Onyx |
-| **Agent C (Gemini)** | Constraints | Historical precedents, feasibility | Fable |
-| **Moderator** | Process | - | Nova |
-
----
+- **`PolymarketService`**: Interfaces with Gamma API to resolve slugs/urls and fetch resolution rules.
+- **`PredictionService`**: Orchestrates independent agent research (no cross-agent leakage).
+- **`DebateService`**: Implements turn-based logic where agents challenge specific factual claims.
+- **`VoiceService`**: Manages OpenAI `tts-1` generation for multi-voice debate output.
 
 ## ⚖️ Legal & Positioning
-- This system provides **probabilistic forecasts**, NOT betting advice.
-- No real-money interaction or wagering.
 - Global Disclaimer: *“This content is for informational and educational purposes only.”*
+- The system generates **probabilistic forecasts**, NOT betting/financial advice.
+- No real-money wagering or betting interactions are supported.

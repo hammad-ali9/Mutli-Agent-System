@@ -66,20 +66,21 @@ Find IDs or Slugs for active tech markets:
 python main.py discover
 ```
 
-**Run Research & Predictions (V0)**
-Fetches market data, triggers independent research, and locks predictions in DB.
+**Run Full AI Battle (V0 + V1)**
+This single command automates the entire flow:
+1. Fetches market data.
+2. Triggers independent AI research.
+3. Generates and stores predictions.
+4. Initiates the **Text Debate Layer** between agents.
+5. Displays the final debate transcript and reasoning.
+
 ```bash
-python main.py predict [event_id | slug | url]
+python main.py run [event_id | slug | url]
 ```
 
-**Trigger Agent Debate (V1/V2)**
-Starts a moderated debate between agents based on previously locked predictions.
+*Example:*
 ```bash
-# Text-only debate
-python main.py debate [event_id | slug] --rounds 3
-
-# With Voice (OpenAI TTS)
-python main.py debate [event_id | slug] --voice
+python main.py run which-company-will-have-the-best-ai-model-for-coding-at-the-end-of-2025
 ```
 
 ---

@@ -5,8 +5,18 @@ from src.prompts import MODERATOR_SYSTEM_PROMPT
 
 class ModeratorAgent:
     def __init__(self):
-        self.model_name = "gpt-4o" # Using a high-level model for moderation
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.model_name = "gpt-4o"
+        self._client = None
+
+    @property
+    def client(self):
+        if not self._client:
+            self._client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        return self._client
+
+    def has_valid_config(self) -> bool:
+        key = os.getenv("OPENAI_API_KEY")
+        return bool(key) and not key.startswith("your_")
 
     def provide_direction(self, event_title: str, predictions_summary: str, transcript: str) -> str:
         """

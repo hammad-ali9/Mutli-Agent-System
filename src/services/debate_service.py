@@ -44,6 +44,10 @@ class DebateService:
             print("No predictions found for this event. Run 'predict' first.")
             return
 
+        if not self.moderator.has_valid_config():
+            print("❌ Moderator (OpenAI) configuration is missing or invalid. Please set a valid OPENAI_API_KEY for V1 debates.")
+            return
+
         print(f"\n--- Starting Debate: {event_title} ---")
         transcript = []
         transcript_str = "No turns yet."
